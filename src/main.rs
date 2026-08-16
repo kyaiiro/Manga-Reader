@@ -135,4 +135,4 @@ impl eframe::App for MangaReaderApp {
     }
 }
 
-//TODO Add an actual search input and add the names of the results under the image
+//TODO Names of the results under the image
