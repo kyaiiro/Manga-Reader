@@ -22,6 +22,10 @@ I mean it shows the art and stuff ✌️
 I'm working on just getting 1 source rn cause more will be easier
 <br>
 I will prob end up re-writing the app a few times still. Prob gonna have to soon to make it async anyway lmao, especially with discord rpc and AL tracking
+<br>
+### Current todo list:
+TODO Add manga titles under cover art
+TODO Add support for more results at a time
 
 #### Docs:
 no. later.
