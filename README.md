@@ -25,7 +25,10 @@ I will prob end up re-writing the app a few times still. Prob gonna have to soon
 <br>
 ### Current todo list:
 TODO Add manga titles under cover art
+<br>
 TODO Add support for more results at a time
+<br>
+FIXME Requests take ages to load, repaint must happen faster
 
 #### Docs:
 no. later.
