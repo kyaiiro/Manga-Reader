@@ -24,11 +24,7 @@ I'm working on just getting 1 source rn cause more will be easier
 I will prob end up re-writing the app a few times still. Prob gonna have to soon to make it async anyway lmao, especially with discord rpc and AL tracking
 <br>
 ### Current todo list:
-TODO Add manga titles under cover art
-<br>
-TODO Add support for more results at a time
-<br>
-FIXME Requests take ages to load, repaint must happen faster
+TODO Open a manga reslt to view more details
 
 #### Docs:
 no. later.

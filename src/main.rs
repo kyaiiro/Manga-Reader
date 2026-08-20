@@ -82,29 +82,40 @@ impl eframe::App for MangaReaderApp {
                     self.entries = mangadex::search(&self.search_text, "4", "safe");
                 }
 
-                ui.horizontal(|ui| {
-                    for item in &self.entries {
-                        let url = item.cover_url.clone() + ".128.jpg";
-                        println!("{}", url);
-                        if let Some(tex) = self.textures.get(&url) {
-                            ui.vertical(|ui| {
-                                ui.image((tex.id(), egui::Vec2::new(128.0, 192.0)));
-                                ui.label("");
-                            });
-                        } else {
-                            ui.label("Loading...");
+                ui.label(egui::RichText::from("MangaDex")
+                    .heading()
+                    .size(32.0));
+                if self.entries.is_empty() {
+                    ui.label("No results yet, search for something...");
+                }
+                if self.loading.is_empty() {
+                    ui.horizontal(|ui| {
+                        for item in &self.entries {
+                            let url = item.cover_url.clone() + ".256.jpg";
+                            if let Some(tex) = self.textures.get(&url) {
+                                ui.vertical(|ui| {
+                                    ui.set_max_width(256.0);
+                                    ui.image((tex.id(), egui::Vec2::new(256.0, 336.0)));
+                                    ui.add(egui::Label::new(egui::RichText::from(&item.title).heading()).truncate());
+                                });
+                            }
                         }
-                    }
-                });
+                    });
+                } else {
+                    ui.label(egui::RichText::from("Loading...")
+                        .size(16.0));
+                }
             });
         });
 
         for item in &self.entries {
-            let url = item.cover_url.clone() + ".128.jpg";
+            let url = item.cover_url.clone() + ".256.jpg";
             if !self.textures.contains_key(&url) && !self.loading.contains(&url) {
                 self.loading.insert(url.clone());
                 let tx = self.image_tx.clone();
                 let url_clone = url.clone();
+                let ctx = ui.ctx().clone();
+
                 std::thread::spawn(move || {
                     let client = reqwest::blocking::Client::builder()
                         .user_agent("MangaReaderApp/0.1")
@@ -128,11 +139,10 @@ impl eframe::App for MangaReaderApp {
                         }
                     };
                     let _ = tx.send((url_clone, bytes));
+                    ctx.request_repaint();
                 });
             }
         }
 
     }
 }
-
-//TODO Names of the results under the image
