@@ -2,7 +2,6 @@ use super::MangaEntry;
 use reqwest::Client;
 use scraper::{Html, Selector};
 
-#[allow(unused)]
 pub async fn search(query : &str, limit : &str, rating : &str) -> anyhow::Result<Vec<MangaEntry>> {
     let resp = Client::new()
         .get("https://weebcentral.com/search/data")
