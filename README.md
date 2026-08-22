@@ -24,7 +24,9 @@ I'm working on just getting 1 source rn cause more will be easier
 I will prob end up re-writing the app a few times still. Prob gonna have to soon to make it async anyway lmao, especially with discord rpc and AL tracking
 <br>
 ### Current todo list:
-TODO Open a manga reslt to view more details
+Add to / remove from library button for manga detail pages
+<br>
+Add chapters to manga details
 
 #### Docs:
 no. later.
