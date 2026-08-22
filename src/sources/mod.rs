@@ -3,7 +3,7 @@ pub mod weebcentral;
 pub mod dynasty;
 
 #[allow(unused)]
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct MangaEntry {
     pub id: String,
     pub title: String,
