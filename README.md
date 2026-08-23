@@ -24,9 +24,13 @@ I'm working on just getting 1 source rn cause more will be easier
 I will prob end up re-writing the app a few times still. Prob gonna have to soon to make it async anyway lmao, especially with discord rpc and AL tracking
 <br>
 ### Current todo list:
-Add to / remove from library button for manga detail pages
+Format save/remove button
+<br>
+Make remove button actually remove
 <br>
 Add chapters to manga details
+<br>
+Maybe split page functions into files? (src/pages/home.rs, search.rs, details.rs)
 
 #### Docs:
 no. later.
