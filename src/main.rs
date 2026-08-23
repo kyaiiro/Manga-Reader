@@ -1,5 +1,6 @@
 mod sources;
 mod shortcuts;
+use eframe::egui::accesskit::Role::ListBoxOption;
 use shortcuts::{cover, md};
 use sources::{MangaEntry, mangadex, weebcentral, dynasty};
 
@@ -7,6 +8,8 @@ use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use eframe::egui::{self};
 use std::sync::mpsc;
 use std::collections::HashMap;
+use std::fs;
+use std::path::Path;
 
 fn main() -> eframe::Result<()> {
     let native_options = eframe::NativeOptions::default();
@@ -27,6 +30,7 @@ enum Page {
 
 struct MangaReaderApp {
     page: Page,
+    library: Vec<MangaEntry>,
     search_text: String,
     entries: Vec<MangaEntry>,
     textures: HashMap<String, egui::TextureHandle>,
@@ -46,6 +50,7 @@ impl Default for MangaReaderApp {
         let (search_tx, search_rx) = mpsc::channel::<Vec<MangaEntry>>();
         Self {
             page: Page::Home,
+            library: Vec::new(),
             search_text: String::new(),
             entries: Vec::new(),
             textures: HashMap::new(),
@@ -111,8 +116,54 @@ impl eframe::App for MangaReaderApp {
 }
 
 impl MangaReaderApp {
+    fn library_path(&self) -> std::path::PathBuf {
+        std::path::PathBuf::from("src/library.json")
+    }
+
+    fn save_entry(&mut self, entry: &MangaEntry) {
+        let path = self.library_path();
+
+        let mut entries: Vec<MangaEntry> = std::fs::read_to_string(&path)
+            .ok()
+            .and_then(|data| serde_json::from_str(&data).ok())
+            .unwrap_or_default();
+
+        if entries.iter().any(|e| e.id == entry.id) {
+            println!("Entry already in library: {}", entry.title);
+            return;
+        }
+
+        entries.push(entry.clone());
+
+        match serde_json::to_string_pretty(&entries) {
+            Ok(json) => {
+                if let Err(e) = std::fs::write(&path, json) {
+                    eprintln!("Failed to write library file: {e}");
+                }
+            }
+            Err(e) => eprint!("Failed to serialize entry: {e}"),
+        }
+    }
+
+    fn load_entries(&mut self, path: &Path) -> Vec<MangaEntry> {
+        let path = self.library_path();
+
+        match std::fs::read_to_string(&path) {
+            Ok(data) => match serde_json::from_str(&data) {
+                Ok(entries) => entries,
+                Err(e) => {
+                    eprintln!("Failed to parse library file: {e}");
+                    Vec::new()
+                }
+            },
+            Err(_) => {
+                Vec::new()
+            }
+        }
+    }
+
     fn show_home(&mut self, ui: &mut egui::Ui) {
-        
+
     }
 
     fn show_search(&mut self, ui: &mut egui::Ui) {
@@ -200,6 +251,10 @@ impl MangaReaderApp {
                     } else {
                         let (rect, _) = ui.allocate_exact_size(egui::Vec2::new(256.0, 336.0), egui::Sense::hover());
                         ui.painter().rect_filled(rect, 4.0, egui::Color32::DARK_GRAY);
+                    }
+                    if ui.button("Add To Library").clicked() {
+                        println!("Button clicked");
+                        self.save_entry(&entry);
                     }
                     //TODO add a button here to add the entry to your home page. Save these entries in a json or smt?
 

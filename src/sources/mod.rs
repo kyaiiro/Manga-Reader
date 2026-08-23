@@ -1,9 +1,10 @@
+use serde::{Serialize, Deserialize};
 pub mod mangadex;
 pub mod weebcentral;
 pub mod dynasty;
 
 #[allow(unused)]
-#[derive(Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct MangaEntry {
     pub id: String,
     pub title: String,
