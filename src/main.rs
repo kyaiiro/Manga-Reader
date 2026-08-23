@@ -8,7 +8,6 @@ use egui_commonmark::{CommonMarkCache, CommonMarkViewer};
 use eframe::egui::{self};
 use std::sync::mpsc;
 use std::collections::HashMap;
-use std::fs;
 use std::path::Path;
 
 fn main() -> eframe::Result<()> {
@@ -30,7 +29,6 @@ enum Page {
 
 struct MangaReaderApp {
     page: Page,
-    library: Vec<MangaEntry>,
     search_text: String,
     entries: Vec<MangaEntry>,
     textures: HashMap<String, egui::TextureHandle>,
@@ -50,7 +48,6 @@ impl Default for MangaReaderApp {
         let (search_tx, search_rx) = mpsc::channel::<Vec<MangaEntry>>();
         Self {
             page: Page::Home,
-            library: Vec::new(),
             search_text: String::new(),
             entries: Vec::new(),
             textures: HashMap::new(),
@@ -163,8 +160,48 @@ impl MangaReaderApp {
     }
 
     fn show_home(&mut self, ui: &mut egui::Ui) {
+        let mut clicked: Option<usize> = None;
 
-    }
+        let path = self.library_path();
+        let library = self.load_entries(&path);
+
+        egui::CentralPanel::default().show(ui, |ui| {
+            egui::ScrollArea::horizontal().show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    for (idx, item) in library.iter().enumerate() {
+                        let url = item.cover_url.clone() +".256.jpg";
+                        ui.vertical(|ui| {
+                            ui.set_max_width(256.0);
+                            if let Some(tex) = self.textures.get(&url) {
+                                let image = egui::Image::from_texture((tex.id(), egui::Vec2::new(256.0, 336.0)))
+                                    .sense(egui::Sense::click());
+                                let response = ui.add(image);
+                                if response.clicked() {
+                                    clicked = Some(idx);
+                                }
+                            } else {
+                                let (rect, _) = ui.allocate_exact_size(egui::vec2(256.0, 336.0), egui::Sense::hover());
+                                ui.painter().rect_filled(rect, 0.0, egui::Color32::DARK_GRAY);
+                            }
+                            ui.add(egui::Label::new(egui::RichText::from(&item.title).heading()).truncate());
+                        });
+                    }
+                });
+            });
+        });
+
+        if let Some(idx) = clicked {
+            self.selected_entry = Some(self.entries[idx].clone());
+        }
+
+        for item in library {
+            let url = item.cover_url.clone() + ".256.jpg";
+            if !self.textures.contains_key(&url) && !self.loading.contains(&url) {
+                self.loading.insert(url.clone());
+                cover::load(url, self.image_tx.clone(), ui.ctx().clone());
+            }
+        }
+}
 
     fn show_search(&mut self, ui: &mut egui::Ui) {
         let mut clicked: Option<usize> = None;
