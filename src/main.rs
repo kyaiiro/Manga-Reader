@@ -1,6 +1,5 @@
 mod sources;
 mod shortcuts;
-use eframe::egui::accesskit::Role::ListBoxOption;
 use shortcuts::{cover, md};
 use sources::{MangaEntry, mangadex, weebcentral, dynasty};
 
@@ -114,7 +113,7 @@ impl eframe::App for MangaReaderApp {
 
 impl MangaReaderApp {
     fn library_path(&self) -> std::path::PathBuf {
-        std::path::PathBuf::from("src/library.json")
+        std::path::PathBuf::from("src/library.json") //? will eventaully save this to a ~/.config for linux and C:/user/.../appdata for windows
     }
 
     fn save_entry(&mut self, entry: &MangaEntry) {
@@ -166,32 +165,44 @@ impl MangaReaderApp {
         let library = self.load_entries(&path);
 
         egui::CentralPanel::default().show(ui, |ui| {
-            egui::ScrollArea::horizontal().show(ui, |ui| {
-                ui.horizontal(|ui| {
-                    for (idx, item) in library.iter().enumerate() {
-                        let url = item.cover_url.clone() +".256.jpg";
-                        ui.vertical(|ui| {
-                            ui.set_max_width(256.0);
-                            if let Some(tex) = self.textures.get(&url) {
-                                let image = egui::Image::from_texture((tex.id(), egui::Vec2::new(256.0, 336.0)))
-                                    .sense(egui::Sense::click());
-                                let response = ui.add(image);
-                                if response.clicked() {
-                                    clicked = Some(idx);
-                                }
-                            } else {
-                                let (rect, _) = ui.allocate_exact_size(egui::vec2(256.0, 336.0), egui::Sense::hover());
-                                ui.painter().rect_filled(rect, 0.0, egui::Color32::DARK_GRAY);
+            egui::ScrollArea::vertical()
+                .auto_shrink([false, false])
+                .show(ui, |ui| {
+                    let item_width = 256.0;
+                    let spacing = ui.spacing().item_spacing.x;
+                    let available = ui.available_width();
+                    let columns = ((available + spacing) / (item_width + spacing))
+                        .floor()
+                        .max(1.0) as usize;
+
+                    for row in library.chunks(columns) {
+                        ui.horizontal(|ui| {
+                            for item in row {
+                                let idx = library.iter().position(|e| e.id == item.id).unwrap();
+                                let url = item.cover_url.clone() + ".256.jpg";
+                                ui.vertical(|ui| {
+                                    ui.set_max_width(item_width);
+                                    if let Some(tex) = self.textures.get(&url) {
+                                        let image = egui::Image::from_texture((tex.id(), egui::Vec2::new(256.0, 336.0)))
+                                            .sense(egui::Sense::click());
+                                        let response = ui.add(image);
+                                        if response.clicked() {
+                                            clicked = Some(idx);
+                                        }
+                                    } else {
+                                        let (rect, _) = ui.allocate_exact_size(egui::vec2(256.0, 336.0), egui::Sense::hover());
+                                        ui.painter().rect_filled(rect, 0.0, egui::Color32::DARK_GRAY);
+                                    }
+                                    ui.add(egui::Label::new(egui::RichText::from(&item.title).heading()).truncate());
+                                });
                             }
-                            ui.add(egui::Label::new(egui::RichText::from(&item.title).heading()).truncate());
                         });
                     }
                 });
-            });
         });
 
         if let Some(idx) = clicked {
-            self.selected_entry = Some(self.entries[idx].clone());
+            self.selected_entry = Some(library[idx].clone());
         }
 
         for item in library {
@@ -278,6 +289,13 @@ impl MangaReaderApp {
         let url = entry.cover_url.clone() + ".256.jpg";
         let title = entry.title.clone();
         let desc = entry.desc.clone();
+        let mut button_tag = "Add To Library";
+        let path = self.library_path();
+
+        let library: Vec<MangaEntry> = std::fs::read_to_string(&path)
+            .ok()
+            .and_then(|data| serde_json::from_str(&data).ok())
+            .unwrap_or_default();
         //TODO Add chapters
 
         egui::CentralPanel::default().show(ui, |ui| {
@@ -289,11 +307,10 @@ impl MangaReaderApp {
                         let (rect, _) = ui.allocate_exact_size(egui::Vec2::new(256.0, 336.0), egui::Sense::hover());
                         ui.painter().rect_filled(rect, 4.0, egui::Color32::DARK_GRAY);
                     }
-                    if ui.button("Add To Library").clicked() {
-                        println!("Button clicked");
-                        self.save_entry(&entry);
+
+                    if library.iter().any(|e| e.id == entry.id) {
+                        button_tag = "Remove From Library";
                     }
-                    //TODO add a button here to add the entry to your home page. Save these entries in a json or smt?
 
                     ui.vertical(|ui| {
                         ui.label(egui::RichText::from(title)
@@ -319,6 +336,12 @@ impl MangaReaderApp {
                             });
                     })
                 });
+                
+                //TODO Format this button nicely, looks bad rn
+                if ui.button(button_tag).clicked() {
+                    println!("Button clicked");
+                    self.save_entry(&entry); //TODO Make this remove from library if it's there and remove is clicked
+                }
             });
         });
     }
