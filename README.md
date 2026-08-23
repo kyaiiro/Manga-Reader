@@ -1,6 +1,8 @@
 # Manga Reader App (tbd)
 I'm making a manga reader (like [komikku](https://github.com/komikku-app/komikku)) for linux (and eventually windows) because I wasn't happy with the amount of features on other desktop readers.
 
+Here you can see how many times I have reloaded this page 💔
+<br>
 ![Visitor Count](https://count.getloli.com/get/@kyaiiro?theme=sketch-1&padding=3)
 
 ### Things this app will have:
